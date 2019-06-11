@@ -1,0 +1,19 @@
+/**
+ * 保存会员模块同步 json 和 js 文件所需要的变量。
+ */
+ext{
+    //定义路径 以脚本执行的环境目录为 坐标，一般为 app的build.gradle 环境目录。
+    UPDATE_FROM_DIR = '/demo/test/'
+    UPDATE_TO_DIR = '../member/src/main/assets'
+    //文件对应关系 key=copy from 路径，value=copy to 路径
+    RESOURCE_MAP = [
+            "test1/test1.json": "/test_one/aaaaafffe.json",
+            "test1/test1.js"  : "/test_one/aa.js",
+            "test2/test2.json": "/test_two/sonone/",
+            "test2/test2.js"  : "/test_two/sonone/",
+    ]
+    //是否开启用同步模式
+    openSynchModel = true
+}
+
+apply from:'http://git.2dfire.net/yusuzi/filestore/raw/master/GradleScript/synch_resource_script.gradle'

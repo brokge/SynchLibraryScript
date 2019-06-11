@@ -1,0 +1,111 @@
+//import groovy.transform.Field
+
+//不导入则无法使用Field注解
+//@Field String updateDir = '../../test'
+
+//-------------------
+
+//是否开启用同步模式
+def isOpenSynchModel = true
+
+//打印编译线
+def printCompileLine() {
+    logger.warn("synch=======================================================")
+}
+
+//copy File 到仓库目录
+def copyFile() {
+
+    ext.RESOURCE_MAP.each { entry ->
+        println ':copy start'
+        copy {
+
+            includeEmptyDirs = false
+            println ':copy start from ' + ext.UPDATE_FROM_DIR + entry.key
+            from ext.UPDATE_FROM_DIR + entry.key
+            include '**.js', '**.json'
+            into ext.UPDATE_TO_DIR + entry.value
+            println ':copy to' + ext.UPDATE_TO_DIR + entry.value
+
+        }
+        println ':copy end'
+    }
+}
+
+//创建和更新仓库
+def gitUpdate() {
+
+    exec {
+        args ext.UPDATE_FROM_DIR,'FlowTag/'
+        workingDir './'
+        //commandLine 'bash', './update.sh'
+        commandLine 'bash', './update.sh'
+    }
+}
+
+def startSyncResource() {
+    printCompileLine()
+    println ':synch:start gitUpdate'
+    gitUpdate()
+    println ':synch:end gitUpdate'
+
+    println ':synch:start copy seeting model'
+    copyFile()
+    println ':synch:end copy seeting model'
+    printCompileLine()
+}
+
+//同步task 在 preBuild 的doFirst中调用
+tasks.getByName("appStart") {
+    it.doFirst {
+        if (isOpenSynchModel) {
+            startSyncResource()
+        }
+    }
+}
+
+//手动同步资源
+task synchResource << {
+    if (isOpenSynchModel) {
+        startSyncResource()
+    }
+}
+
+task gitUpdate(type: Exec, description: '更新资源') {
+    def shellCmd = 'echo :执行命令啦'
+    commandLine shellCmd
+}
+
+ext {
+
+    //定义路径 依照脚本当前目录为坐标
+    UPDATE_FROM_DIR = '../../test/'
+
+    UPDATE_TO_DIR = 'src/main/assets'
+
+    RESOURCE_MAP = [
+            "test1/test1.json": "/test_one/",
+            "test1/test1.js"  : "/test_one/",
+            "test2/test2.json": "/test_two/",
+            "test2/test2.js"  : "/test_two/",
+    ]
+}
+
+/*def midir =''
+task copySettingFile(type:Copy){
+
+    includeEmptyDirs = false
+    println ':copying'
+    from(midir) {
+        include '**.md'
+        into('src/main/assets/')
+    }
+}
+
+tasks.whenTaskAdded {
+    task->
+        if(task.name.equals("assembleRelease")){
+            copyFile.dependsOn preBuild
+        }
+
+}*/

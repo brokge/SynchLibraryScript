@@ -1,0 +1,40 @@
+//import groovy.transform.Field
+
+def printCompileLine() {
+    logger.warn("snapshot===========================")
+}
+
+def isSnapShotModel = true
+
+task deleteFiles(type: Delete) {
+    doFirst {
+        printCompileLine()
+        println ':start delete'
+        println ":delete: ${rootDir}/.idea/libraries"
+        delete "${rootDir}/.idea/libraries/"//"${rootDir}+/.idea/libraries/"
+        println ':end delete'
+    }
+}
+
+task snapShotClean(dependsOn: clean) {
+    doFirst {
+        println ':snapShotClean'
+    }
+}
+
+task snapShotBuild(dependsOn: build) {
+    doFirst {
+        println ':snapShotBuild'
+    }
+    doLast {
+        printCompileLine()
+    }
+}
+
+task snapShotSync(dependsOn: ['deleteFiles', 'snapShotClean', 'snapShotBuild']) {
+    if (isSnapShotModel) {
+        snapShotClean.mustRunAfter(tasks.getByName('deleteFiles'))
+        snapShotBuild.mustRunAfter(tasks.getByName('snapShotClean'))
+    }
+}
+

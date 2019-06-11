@@ -1,0 +1,64 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "com.a2dfire.yusuzi.synchlibraryscript"
+        minSdkVersion 15
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}
+
+task appStart(type: Exec, dependsOn: 'installDebug') {
+    println 'appStart start'
+    commandLine 'adb', 'shell', 'am', 'start', '-n', 'com.a2dfire.yusuzi.synchlibraryscript/com.a2dfire.yusuzi.synchlibraryscript.MainActivity', '-a',
+            'android.intent.action.MAIN', '-c', 'android.intent.category.LAUNCHER'
+}
+
+//depends on synchResource 和 appStart
+task appStartSync(dependsOn: ['synchResource', 'appStart']) {
+
+    //判断是 是否导入 ImportMember
+    if (ImportMember) {
+        println 'ImportMember=true'
+        //此环境的路径在主项目下是./,在module 仓库下是 ../,所以为了规避这个问题，通过 rootDir 获取一个绝对路径
+        def synchResourceName = "${rootDir}/member/synch_resource.gradle"
+
+        def synchResourceFile = new File(synchResourceName)
+
+        if (synchResourceFile.exists()) {
+            apply from: synchResourceFile.getAbsolutePath()
+            println 'apply from' + synchResourceName
+        } else {
+            println 'no exits ' + synchResourceName
+        }
+    }
+
+    println 'appStartSync start'
+
+    //声明 appStart 必须 在 synchResource 之后执行
+    appStart.mustRunAfter(tasks.getByName('synchResource'))
+
+    //tasks.getByName('synchResource').mustRunAfter(appStart)
+}
+
+//apply from: './output.gradle'
+apply from: './customer_properties.gradle'

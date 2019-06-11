@@ -1,0 +1,90 @@
+import groovy.transform.Field
+
+//不导入则无法使用Field注解
+//@Field String updateDir = '../../test'
+
+//-------------------
+//定义路径 依照脚本当前目录为坐标
+@Field String UPDATE_FROM_DIR = '../../test/'
+
+@Field String UPDATE_TO_DIR = '../member/src/main/assets'
+
+@Field Map<String, String> RESOURCE_MAP = [
+        "test1/test1.json": "/test_one/",
+        "test1/test1.js"  : "/test_one/",
+        "test2/test2.json": "/test_two/",
+        "test2/test2.js"  : "/test_two/",
+]
+
+//是否开启用同步模式
+def isOpenSynchModel = true
+
+//打印编译线
+def printCompileLine() {
+    logger.warn("synch=======================================================")
+}
+
+//copy File 到仓库目录
+def copyFile() {
+
+    RESOURCE_MAP.each { entry ->
+        println ':copy start'
+        copy {
+
+            includeEmptyDirs = false
+            println ':copy start from ' + UPDATE_FROM_DIR + entry.key
+            from UPDATE_FROM_DIR + entry.key
+            include '**.js', '**.json'
+            into UPDATE_TO_DIR + entry.value
+            println ':copy to' + UPDATE_TO_DIR + entry.value
+
+        }
+        println ':copy end'
+    }
+}
+
+def startSyncResource() {
+    printCompileLine()
+    println ':synch:start gitUpdate'
+    //gitUpdate()
+    println ':synch:end gitUpdate'
+
+    println ':synch:start copy seeting model'
+    copyFile()
+    println ':synch:end copy seeting model'
+    printCompileLine()
+}
+
+//同步task 在 preBuild 的doFirst中调用
+tasks.getByName("appStart") {
+    if (isOpenSynchModel) {
+        startSyncResource()
+    }
+}
+
+//手动同步资源
+task synchResource << {
+    if (isOpenSynchModel) {
+        startSyncResource()
+    }
+}
+
+
+/*def midir =''
+task copySettingFile(type:Copy){
+
+    includeEmptyDirs = false
+    println ':copying'
+    from(midir) {
+        include '**.md'
+        into('src/main/assets/')
+    }
+}
+
+tasks.whenTaskAdded {
+    task->
+        if(task.name.equals("assembleRelease")){
+            copyFile.dependsOn preBuild
+        }
+
+}*/

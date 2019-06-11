@@ -1,0 +1,55 @@
+//扩展属性字段　outFullFileName,并设置为“”
+project.ext.set("outFullFileName", "")
+
+task assembleMd5(dependsOn: "assembleFirRelease") {
+    doFirst {
+        exec {
+            println 'createMd5'
+            workingDir "${projectDir}"
+//            commandLine 'java','CreateMd5',"filePath"
+            commandLine 'java', '-version'
+            standardOutput = new ByteArrayOutputStream()
+            ext.out1 = {
+                return standardOutput.toString()
+            }
+        }
+    }
+    doLast {
+        println("MD5:" + ext.out1())
+    }
+}
+
+//自定义属性对象
+class MyExtension {
+    String foo
+
+    MyExtension(String foo) {
+        this.foo = foo
+    }
+}
+
+task testCustomerProperties {
+    project.extensions.create("custom", MyExtension, "bar")
+
+    println "project.custom instanceof MyExtension? ${project.custom instanceof MyExtension}"
+    println "project.custom foo==bar? ${project.custom.foo == "bar"}"
+
+    //给custom进行赋值
+    project.custom {
+        println "project.custom foo==bar? ${foo == "bar"}"
+        foo = "other"
+    }
+
+    println "project.custom foo==other? ${project.custom.foo == "other"}"
+
+    println "project.custom instanceof ExtensionAware? ${project.custom instanceof ExtensionAware}"
+    project.custom.extensions.create("nested", MyExtension, "baz")
+    println "project.custom.nested.foo==baz? ${project.custom.nested.foo == "baz"}"
+
+//println project.ext.hasProperty("myProperty")==false
+//project.ext.myProperty=="myValue"
+
+//println project.myProperty=="myValue"
+}
+
+

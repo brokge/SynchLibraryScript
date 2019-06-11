@@ -1,0 +1,32 @@
+
+task execTodo {
+    doFirst {
+        exec{
+            workingDir '.'
+            commandLine('whoami')
+            standardOutput =new ByteArrayOutputStream()
+            ext.output1 = {
+                return standardOutput.toString()
+            }
+        }
+    }
+    doLast{
+        println("hahah:"+ext.output1())
+    }
+}
+
+task execTodo1 {
+    doFirst {
+        exec{
+            workingDir '.'
+            commandLine 'java','-version'
+            standardOutput =new ByteArrayOutputStream()
+            ext.output1 = {
+                return standardOutput.toString()
+            }
+        }
+    }
+    doLast{
+        println("hahah:"+ext.output1())
+    }
+}

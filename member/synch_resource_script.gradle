@@ -1,0 +1,97 @@
+/**
+ * 同步文件脚本，尽量不要更改。更改请联系 yusuzi
+ */
+//打印编译线
+def printCompileLine() {
+ logger.warn("synch=======================================================")
+}
+
+def  isOpenSynchModel = ext.openSynchModel
+//copy File 到指定仓库目录
+def copyFile() {
+
+ ext.RESOURCE_MAP.each { entry ->
+  println ':copy start'
+
+  copy {
+
+   includeEmptyDirs = false
+   println ':copy from ' + UPDATE_FROM_DIR + entry.key
+   from UPDATE_FROM_DIR + entry.key
+   include '**.js', '**.json'
+
+   //.*\\([^\.]+)\..*
+   //entry.value.eachMatch('./([^.]+)...*$', {
+   //    filename ->
+   //        println 'filename=' + filename[1]
+   //})
+   def endIndex = entry.value.lastIndexOf('.')
+   def startIndex = entry.value.lastIndexOf('/')
+
+   def endSuffix = entry.value.endsWith('/')
+
+   if (endIndex > 0 && !endSuffix) {
+    //ex: /path/
+    def intoDir = entry.value.substring(0, startIndex)
+    into UPDATE_TO_DIR + intoDir
+    println ':copy to ' + UPDATE_TO_DIR + entry.value
+
+    //ex: fileName
+    def newFileName = entry.value.substring(startIndex + 1, endIndex)
+    //ex: .json
+    def endWithSuffix = entry.value.substring(endIndex, entry.value.length())
+
+    if (!newFileName.empty) {
+     rename { String fileName ->
+      newFileName + "${endWithSuffix}"
+     }
+     println ':rename ' + newFileName + endWithSuffix
+    }
+   } else {
+    into UPDATE_TO_DIR + entry.value
+    println ':copy to ' + UPDATE_TO_DIR + entry.value
+   }
+
+   //if (newFileName) {
+   //    rename { String fileName ->
+   //        fileName.replace('1', newFileName)
+   //    }
+   //}
+   // 使用正则表达式映射文件名
+   //rename '(.+)-staging-(.+)', '$1$2'
+   //rename(/(.+)-staging-(.+)/, '$1$2')
+  }
+
+  println ':copy end'
+ }
+}
+
+def startSyncResource() {
+ printCompileLine()
+ println ':synch:start copy  model'
+ copyFile()
+ println ':synch:end copy  model'
+ printCompileLine()
+}
+
+//同步task
+// 1、通过这个方法有个问题:在执行任何 gradle task命令时候都会执行。
+// 2、如果 添加 doFirst 或者 doLast 则会出现执行顺序延后的问题。
+// 3、基于以上两点 暂时不用这个方法。
+/*
+tasks.getByName("appStartSync") {
+        if (isOpenSynchModel) {
+            startSyncResource()
+        }
+}
+*/
+
+//同步资源
+task synchResource {
+
+ doFirst {
+  if (isOpenSynchModel) {
+   startSyncResource()
+  }
+ }
+}
